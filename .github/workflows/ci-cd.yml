@@ -57,7 +57,7 @@ jobs:
 
     - name: Build image with tags
       run: |
-        docker build -t ${{ env.REGISTRY }}/{{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:latest \
+        docker build -t ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:latest \
                      -t ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }} .
 
     - name: Push image to GHCR
