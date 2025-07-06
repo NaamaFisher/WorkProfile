@@ -1,0 +1,65 @@
+name: WorkProfile CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  IMAGE_NAME: workprofile-app
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: docker build -t ${{ env.IMAGE_NAME }} .
+
+    - name: Run container
+      run: docker run -d -p 5000:5000 --name app ${{ env.IMAGE_NAME }}
+
+    - name: Wait for container to be ready
+      run: sleep 5
+
+    - name: Test "/" endpoint
+      run: curl --fail http://localhost:5000/
+
+    - name: Test "/health" endpoint
+      run: curl --fail http://localhost:5000/health
+
+  publish:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Extract short SHA
+      id: version
+      run: echo "sha_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build image with tags
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
+                     -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }} .
+
+    - name: Push image to Docker Hub
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }}
+
