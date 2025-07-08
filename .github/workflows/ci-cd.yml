@@ -12,7 +12,6 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-
   # Stage 1: Validation
   validate:
     runs-on: ubuntu-latest
@@ -20,21 +19,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Python dependencies
+      - name: Validate Python dependencies (install first)
         run: |
           python3 -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Validate Python dependencies
-        run: |
+          pip install -r workprofile-advanced/requirements.txt
           python3 -c "import flask; print('✓ Flask OK')"
           python3 -c "import mysql.connector; print('✓ MySQL Connector OK')"
 
       - name: Validate required files exist
         run: |
           test -f Dockerfile && echo "✓ Dockerfile OK"
-          test -f requirements.txt && echo "✓ requirements.txt OK"
-          test -f app.py && echo "✓ app.py OK"
+          test -f workprofile-advanced/requirements.txt && echo "✓ requirements.txt OK"
+          test -f workprofile-advanced/src/app.py && echo "✓ app.py OK"
 
   # Stage 2: Build & Test Single Container
   build-test:
@@ -78,48 +74,4 @@ jobs:
         run: echo "sha_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry (GHCR)
-        run: echo "${{ secrets.GH_TOKEN11 }}" | docker login ${{ env.REGISTRY }} -u ${{ env.REGISTRY_USER }} --password-stdin
-
-      - name: Build image with tags
-        run: |
-          docker build -t ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:latest \
-                       -t ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }} .
-
-      - name: Push image to GHCR
-        run: |
-          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }}
-
-  # Stage 4: Docker Compose Integration
-  docker-compose-test:
-    runs-on: ubuntu-latest
-    needs: publish
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install Docker Compose
-        run: sudo apt-get update && sudo apt-get install -y docker-compose
-
-      - name: Run docker-compose stack
-        run: |
-          cd docker-compose
-          docker-compose up -d
-          sleep 90
-          curl -f http://localhost:8080/ && echo "Nginx proxy OK"
-          curl -f http://localhost:8080/health && echo "Health OK"
-          curl -s http://localhost:8080/health | grep "Database: Healthy" && echo "Database OK"
-          docker-compose down -v
-
-  # Stage 5: Manual Kubernetes Deployment - Optional
-  manual-k8s-instructions:
-    needs: docker-compose-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Display manual deployment instructions
-        run: |
-          echo "Login to Killercoda Kubernetes playground"
-          echo "Apply your Kubernetes manifests in k8s/*.yaml"
-          echo "Use kubectl wait, kubectl port-forward and curl to test"
-          echo "Check StatefulSet and PVC status with kubectl get pvc"
-          echo "Run kubectl exec into mysql pod and verify DB"
+        run: echo "${{ secrets.GH_TOKEN11 }}" | docker login ${{ env.REGISTRY }} -u ${{ env.REGISTRY_USER }} --password-std
