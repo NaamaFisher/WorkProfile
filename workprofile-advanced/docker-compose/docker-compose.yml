@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: exampleDb
+      MYSQL_USER: flaskapp
+      MYSQL_PASSWORD: flaskapp
+    volumes:
+      - db-data:/var/lib/mysql
+      - ../src/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+  workprofile:
+    build:
+      context: ../src
+      dockerfile: Dockerfile
+    container_name: workprofile
+    environment:
+      DB_HOST: db
+      DB_USER: flaskapp
+      DB_PASS: flaskapp
+      DB_NAME: exampleDb
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    expose:
+      - "5000"
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../src/static:/usr/share/nginx/html:ro
+    depends_on:
+      - workprofile
+    networks:
+      - frontend
+volumes:
+  db-data:
+networks:
+  frontend:
+  backend:
