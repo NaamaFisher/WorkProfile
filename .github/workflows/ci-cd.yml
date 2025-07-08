@@ -20,6 +20,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Validate Python dependencies
         run: |
           python3 -c "import flask; print('✓ Flask OK')"
@@ -27,9 +32,9 @@ jobs:
 
       - name: Validate required files exist
         run: |
-          test -f Dockerfile && echo "✓ Dockerfile exists"
-          test -f requirements.txt && echo "✓ requirements.txt exists"
-          test -f app.py && echo "✓ app.py exists"
+          test -f Dockerfile && echo "✓ Dockerfile OK"
+          test -f requirements.txt && echo "✓ requirements.txt OK"
+          test -f app.py && echo "✓ app.py OK"
 
   # Stage 2: Build & Test Single Container
   build-test:
@@ -52,15 +57,15 @@ jobs:
         run: sleep 15
 
       - name: Test main endpoint
-        run: curl -f http://localhost:5000/ && echo "✓ Main endpoint works"
+        run: curl -f http://localhost:5000/
 
       - name: Test health endpoint
-        run: curl -f http://localhost:5000/health && echo "✓ Health endpoint works"
+        run: curl -f http://localhost:5000/health
 
   # Stage 3: Publish to GHCR
   publish:
-    needs: build-test
     runs-on: ubuntu-latest
+    needs: build-test
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -85,7 +90,7 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.sha_tag }}
 
-  # Stage 4: Docker Compose Integration Test
+  # Stage 4: Docker Compose Integration
   docker-compose-test:
     runs-on: ubuntu-latest
     needs: publish
@@ -102,21 +107,20 @@ jobs:
           docker-compose up -d
           sleep 90
           curl -f http://localhost:8080/ && echo "✓ Nginx proxy OK"
-          curl -f http://localhost:8080/health && echo "✓ Health OK"
+          curl -f http://localhost:8080/health && echo "✓ Health check OK"
           curl -s http://localhost:8080/health | grep "Database: Healthy" && echo "✓ Database connectivity OK"
           docker-compose down -v
 
-  # Stage 5: Manual Kubernetes Deployment Instructions
+  # Stage 5: Manual Kubernetes Deployment (instructions only)
   manual-k8s-instructions:
-    needs: docker-compose-test
     runs-on: ubuntu-latest
+    needs: docker-compose-test
     steps:
-      - name: Display manual deployment instructions
+      - name: Display manual Kubernetes deployment instructions
         run: |
-          echo "🛠 Manual Deployment Instructions:"
-          echo "1. Login to Killercoda Kubernetes playground"
-          echo "2. Apply your Kubernetes manifests from k8s/*.yaml"
-          echo "3. Use kubectl wait, kubectl port-forward, and curl to test"
-          echo "4. Verify StatefulSet and PVC with kubectl get pvc"
-          echo "5. Use kubectl exec into MySQL pod to check DB and data"
+          echo "✅ Login to Killercoda Kubernetes playground"
+          echo "✅ Apply Kubernetes manifests in k8s/*.yaml"
+          echo "✅ Use kubectl wait, kubectl port-forward and curl to test"
+          echo "✅ Check StatefulSet and PVC status with: kubectl get pvc"
+          echo "✅ Verify DB: kubectl exec -it mysql-0 -- mysql -u flaskapp -pflaskapp -e 'SHOW DATABASES;'"
 
