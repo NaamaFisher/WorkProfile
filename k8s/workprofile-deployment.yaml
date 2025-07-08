@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workprofile-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workprofile
+  template:
+    metadata:
+      labels:
+        app: workprofile
+    spec:
+      containers:
+        - name: workprofile-app
+          image: ghcr.io/naamafisher/workprofile-app:latest
+          ports:
+            - containerPort: 5000
+      imagePullSecrets:
+        - name: ghcr-secret
+
