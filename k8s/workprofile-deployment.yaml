@@ -13,7 +13,7 @@ spec:
         app: workprofile
     spec:
       imagePullSecrets:
-        - name: ghcr-secret  # ✅ חשוב
+        - name: ghcr-secret
 
       initContainers:
       - name: wait-for-mysql
@@ -44,7 +44,7 @@ spec:
       containers:
       - name: workprofile-app
         image: ghcr.io/naamafisher/workprofile-app:latest
-        imagePullPolicy: Always  # ✅ חשוב
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
@@ -68,7 +68,7 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: mysql-user
-        - name: DB_PASSWORD
+        - name: DB_PASS              # ✅ שונה מ-DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
