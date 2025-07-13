@@ -40,7 +40,7 @@ spec:
       containers:
       - name: workprofile-app
         image: ghcr.io/naamafisher/workprofile-app:latest
-        imagePullPolicy: Always
+        imagePullPolicy: Never
         ports:
         - containerPort: 5000
         env:
