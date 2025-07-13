@@ -3,6 +3,4 @@ kind: ConfigMap
 metadata:
   name: mysql-config
 data:
-  MYSQL_DATABASE: workprofiledb
-  MYSQL_USER: workprofileuser
-
+  MYSQL_DATABASE: exampleDb
