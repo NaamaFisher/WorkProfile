@@ -12,6 +12,9 @@ spec:
       labels:
         app: workprofile
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret  # ✅ חשוב
+
       initContainers:
       - name: wait-for-mysql
         image: mysql:5.7
@@ -37,10 +40,11 @@ spec:
                 name: workprofile-config
                 key: DB_NAME
         command: ['sh', '-c', 'until mysql -h "$MYSQL_HOST" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "SELECT 1"; do echo "Waiting for MySQL..."; sleep 3; done']
+
       containers:
       - name: workprofile-app
         image: ghcr.io/naamafisher/workprofile-app:latest
-        imagePullPolicy: Never
+        imagePullPolicy: Always  # ✅ חשוב
         ports:
         - containerPort: 5000
         env:
