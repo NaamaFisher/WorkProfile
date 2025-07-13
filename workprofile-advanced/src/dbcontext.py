@@ -6,7 +6,7 @@ from person import Person
 from flask import Response
 
 db_user = environ.get('DB_USER')
-db_pass = environ.get('DB_PASS')  # ✅ תוקן כאן
+db_pass = environ.get('DB_PASS')
 db_host = environ.get('DB_HOST')
 db_name = environ.get('DB_NAME')
 
@@ -22,6 +22,7 @@ def demo_data() -> List[Person]:
     person1 = Person(1, "John", "Doe", 30, "76 Ninth Avenue St, New York, NY 10011, USA", "Google")
     person2 = Person(2, "Jane", "Doe", 28, "15 Aabogade St, Aarhus, Denmark 8200", "Microsoft")
     person3 = Person(3, "Jack", "Doe", 25, "98 Yigal Alon St, Tel Aviv, Israel 6789141", "Amazon")
+
     return [person1, person2, person3]
 
 def db_data() -> List[Person]:
@@ -29,7 +30,7 @@ def db_data() -> List[Person]:
         return demo_data()
     
     if not (db_user and db_pass):
-        raise Exception("DB_USER and DB_PASSWORD are not set")
+        raise Exception("DB_USER and DB_PASS are not set")
     
     cnx = mysql.connector.connect(**config)
     result = []
@@ -72,4 +73,31 @@ def db_add(person: Person) -> Response:
     if cnx.is_connected():
         cursor = cnx.cursor()
         try:
-            cursor.execute(f"INSERT INTO people (firstName, lastName, age, address, workpl
+            cursor.execute(f"INSERT INTO people (firstName, lastName, age, address, workplace) VALUES ('{person.first_name}', '{person.last_name}', {person.age}, '{person.address}', '{person.workplace}')")
+            cnx.commit()
+            personId = cursor.lastrowid
+        except:
+            status = 404
+        finally:
+            if cnx.is_connected():
+                cursor.close()
+                cnx.close()
+    return Response(status=status, response=str(personId))
+
+
+def health_check() -> bool:
+    if not db_host:
+        return True
+    cnx = mysql.connector.connect(**config)
+    response = False
+    if cnx.is_connected():
+        cursor = cnx.cursor()
+        try:
+            cursor.execute("SELECT 1")
+            cursor.fetchall()
+            response = True
+        finally:
+            if cnx.is_connected():
+                cursor.close()
+                cnx.close()
+    return response
