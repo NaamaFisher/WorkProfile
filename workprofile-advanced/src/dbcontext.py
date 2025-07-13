@@ -6,7 +6,7 @@ from person import Person
 from flask import Response
 
 db_user = environ.get('DB_USER')
-db_pass = environ.get('DB_PASSWORD')  # ✅ תוקן כאן
+db_pass = environ.get('DB_PASS')  # ✅ תוקן כאן
 db_host = environ.get('DB_HOST')
 db_name = environ.get('DB_NAME')
 
