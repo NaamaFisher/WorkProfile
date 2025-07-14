@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'  # שים לב לשדרג כאן מ-3.8 ל-3.9
 services:
   mysql:
     image: mysql:5.7
@@ -14,18 +14,19 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
       interval: 5s
       timeout: 3s
       retries: 10
       start_period: 30s
+
   workprofile:
     build:
       context: ../src
       dockerfile: Dockerfile
     container_name: workprofile
     environment:
-      DB_HOST: db
+      DB_HOST: mysql
       DB_USER: flaskapp
       DB_PASS: flaskapp
       DB_NAME: exampleDb
@@ -44,6 +45,7 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -56,8 +58,11 @@ services:
       - workprofile
     networks:
       - frontend
+
 volumes:
   db-data:
+
 networks:
   frontend:
   backend:
+
