@@ -49,9 +49,9 @@ document.getElementById('addPersonForm').addEventListener('submit', function (ev
     const workplace = document.getElementById('workplace').value;
     const address = document.getElementById('address').value;
 
-    // send put request with person object in body
+    // שים לב: השיטה כאן POST (ולא PUT)
     fetch(`/add`, {
-        method: "PUT",
+        method: "POST", 
         headers: {
             "Content-Type": "application/json"
         },
@@ -64,58 +64,47 @@ document.getElementById('addPersonForm').addEventListener('submit', function (ev
         })
     }).then(res => {
         if (res.status === 200) {
-            // Add new person to the DOM
             res.json().then(id => {
-                // Create new person div
+                // יצירת אלמנטים חדשים להוספה לDOM
                 const newPerson = document.createElement('div');
                 newPerson.className = "person";
                 newPerson.onclick = function () {
                     handlePersonClick(this, id);
                 };
 
-                // Create new person name h3
                 const newPersonName = document.createElement('h3');
                 newPersonName.innerHTML = `${firstName} ${lastName}`;
 
-                // Create new person age p
                 const newPersonAge = document.createElement('p');
                 newPersonAge.innerHTML = `Age: ${age}`;
 
-                // Create new person address p
                 const newPersonAddress = document.createElement('p');
                 newPersonAddress.innerHTML = `Address: ${workplace}`;
 
-                // Create new person workplace div
                 const newPersonWorkplace = document.createElement('p');
                 newPersonWorkplace.innerHTML = `Workplace: ${address}`;
 
-                // Append all new divs to the new person div
                 newPerson.appendChild(newPersonName);
                 newPerson.appendChild(newPersonAge);
                 newPerson.appendChild(newPersonAddress);
                 newPerson.appendChild(newPersonWorkplace);
 
-                // Get the tableContainer div
                 const people = document.getElementById('tableContainer');
-
-                // get the last child of the tableContainer div
                 let parent = people.children[people.children.length - 1];
 
-                // check if parent has 3 children. If it does, create a new one, otherwise use the existing one
                 if (parent.childElementCount === 3) {
                     parent = document.createElement('div');
                     parent.className = "container";
                     people.appendChild(parent);
                 }
 
-                // Append new person div to the parent div
                 parent.appendChild(newPerson);
             });
         } else {
             alert("Something went wrong");
         }
-    })
-        .catch(err => console.log(err));
+    }).catch(err => console.log(err));
 
     closeModal();
 });
+

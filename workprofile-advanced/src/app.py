@@ -1,4 +1,3 @@
-#from cgitb import handler
 from flask import Flask, render_template, request, Response
 from os import environ
 from dbcontext import db_data, db_delete, db_add, health_check
@@ -28,7 +27,7 @@ def delete(id: int):
     app.logger.info("Request to delete person with id: %s", id)
     return db_delete(id)
 
-@app.route("/add", methods=["PUT"])
+@app.route("/add", methods=["POST"])  # כאן POST ולא PUT
 def add():
     body = request.json
     if body is not None:
